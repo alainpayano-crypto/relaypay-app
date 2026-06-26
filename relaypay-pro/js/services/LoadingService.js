@@ -13,6 +13,10 @@ class LoadingServiceClass {
     this.render();
   }
 
+  show(key = 'default') {
+    this.start(key);
+  }
+
   stop(key = 'default') {
     this.activeRequests.delete(key);
     if (this.activeRequests.size === 0) {

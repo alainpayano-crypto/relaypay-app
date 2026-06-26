@@ -462,13 +462,20 @@ async function upgradePlan() {
 }
 
 function openMainApp() {
-  // Redirige a la app principal con el token
-  window.location.href = '/app/index.html?token=' + currentToken;
+  // Navigate in same tab (avoids popup blocker)
+  showSuccess('Abriendo RelayPay Pro...');
+  window.location.href = './nomina_v71.html';
 }
 
 function downloadApp() {
-  // Descarga el archivo HTML standalone
-  window.location.href = '/nomina_v71/index.html';
+  // Download the standalone HTML app
+  showSuccess('Descargando RelayPay Pro...');
+  const link = document.createElement('a');
+  link.href = './nomina_v71.html';
+  link.download = 'RelayPay-Pro.html';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function showError(msg) {

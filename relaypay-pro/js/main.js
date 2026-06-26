@@ -10,7 +10,7 @@ import { AppState } from './state.js';
 import { StorageService } from './services/StorageService.js';
 import { NotificationService } from './services/NotificationService.js';
 import { LoadingService } from './services/LoadingService.js';
-import { Modal } from './components/Modal.js';
+import { modal as Modal, closeModal, showModal } from './components/Modal.js';
 import { getApp, installApp } from './stateHelpers.js';
 import { setLanguage, getLanguage, applyTranslations, t, changeLanguage } from './i18n.js';
 import { APP_CONFIG, STORAGE_KEYS, ROLES, VIEWS } from './config.js';

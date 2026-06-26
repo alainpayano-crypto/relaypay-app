@@ -4,6 +4,7 @@
    ============================================ */
 
 import { StorageService } from './services/StorageService.js';
+import { AuthService } from './services/AuthService.js';
 import { STORAGE_KEYS } from './config.js';
 import { EVENT_NAMES } from './constants.js';
 import { normalizeStr, normalizeTractor, uid } from './utils.js';
@@ -57,7 +58,7 @@ class AppStateClass {
     this.data.settings = StorageService.getJSON(STORAGE_KEYS.settings, {});
     this.data.language = StorageService.get(STORAGE_KEYS.language, 'es');
 
-    const session = AuthService?.getSession();
+    const session = AuthService && AuthService.getSession && AuthService.getSession();
     if (session) {
       this.data.user = session.user;
       this.data.token = session.token;

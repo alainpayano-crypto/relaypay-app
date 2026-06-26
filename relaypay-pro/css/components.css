@@ -1,0 +1,247 @@
+/* ============================================
+   components.css — Cards, badges, tabs, dropdowns
+   Phase 2 — Modular CSS
+   ============================================ */
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--navy);
+}
+
+/* Stat cards */
+.stat-card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--blue);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card .label {
+  font-size: 12px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.stat-card .value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.stat-card .sub {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.stat-card.gold { border-left-color: var(--orange); }
+.stat-card.gold .value { color: var(--orange); }
+.stat-card.green { border-left-color: var(--success); }
+.stat-card.green .value { color: var(--success); }
+.stat-card.navy { border-left-color: var(--navy); }
+.stat-card.navy .value { color: var(--navy); }
+.stat-card.purple { border-left-color: var(--purple); }
+.stat-card.purple .value { color: var(--purple); }
+.stat-card.danger { border-left-color: var(--danger); }
+.stat-card.danger .value { color: var(--danger); }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-info { background: #dbeafe; color: #1e40af; }
+.badge-purple { background: #ede9fe; color: #5b21b6; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-light);
+  border-bottom: 3px solid transparent;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+/* Tables */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+table th {
+  background: var(--bg);
+  padding: 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+
+table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+table tr:hover {
+  background: var(--bg-alt);
+}
+
+table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+table tfoot td {
+  background: var(--bg);
+  font-weight: 700;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+}
+
+.empty-state .icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state .title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+/* Alerts */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  border-left: 4px solid var(--info);
+  background: #f0f9ff;
+}
+
+.alert-warning { background: #fffbeb; border-left-color: var(--warning); }
+.alert-danger { background: #fef2f2; border-left-color: var(--danger); }
+.alert-success { background: #f0fdf4; border-left-color: var(--success); }
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Tractor chips */
+.tractor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  margin: 3px;
+}
+
+.tractor-chip .remove {
+  cursor: pointer;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* Welcome card */
+.welcome-card {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+  color: white;
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.welcome-card .logo-display img {
+  width: 80px;
+  height: 80px;
+}
+
+.welcome-card .step {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 12px;
+  border-radius: var(--radius-md);
+}

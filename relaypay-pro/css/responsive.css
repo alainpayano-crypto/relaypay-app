@@ -1,0 +1,93 @@
+/* ============================================
+   responsive.css — Mobile and tablet breakpoints
+   Phase 2 — Modular CSS
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .form-row-3 {
+    grid-template-columns: 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .app {
+    flex-direction: column;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+
+  .view {
+    padding: 16px;
+  }
+
+  .view-title {
+    font-size: 22px;
+  }
+
+  .stats-grid,
+  .stats-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    max-width: 95vw;
+  }
+
+  .tractor-input-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .view {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .stat-card .value {
+    font-size: 22px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+
+  .card {
+    page-break-inside: avoid;
+  }
+}

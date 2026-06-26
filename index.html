@@ -409,12 +409,27 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   document.getElementById('dashboard').classList.remove('show');
 });
 
-function showDashboard() {
+async function showDashboard() {
   document.getElementById('auth-section').style.display = 'none';
   document.getElementById('dashboard').classList.add('show');
   document.getElementById('welcome-msg').textContent = `Bienvenido, ${currentUser.name}`;
   document.getElementById('company-name').textContent = currentUser.company_name || 'Mi Compañía';
   document.getElementById('user-email').textContent = currentUser.email;
+  
+  // Always fetch fresh data from /api/auth/me to get latest subscription status
+  try {
+    const meRes = await fetch(API_URL + '/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + currentToken }
+    });
+    if (meRes.ok) {
+      const meData = await meRes.json();
+      currentUser = meData.user;
+      localStorage.setItem('relaypay_session', JSON.stringify({ token: currentToken, user: currentUser }));
+    }
+  } catch (e) {
+    console.warn('Failed to refresh user data, using cached:', e.message);
+  }
+  
   const trialEnd = new Date(currentUser.trial_ends_at);
   const now = new Date();
   const daysLeft = Math.max(0, Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24)));

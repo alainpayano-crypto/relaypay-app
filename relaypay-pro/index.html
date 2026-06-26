@@ -29,5 +29,24 @@
 
   <!-- Application bootstrap (ES module) -->
   <script type="module" src="./js/main.js"></script>
+
+  <!-- Global error handler — show errors visibly instead of blank page -->
+  <script>
+    (function() {
+      function show(msg) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#fee;color:#900;padding:12px;font:13px monospace;z-index:99999;white-space:pre-wrap;border-bottom:2px solid #900;';
+        d.textContent = msg;
+        (document.body || document.documentElement).appendChild(d);
+      }
+      window.addEventListener('error', function(e) {
+        show('[ERR] ' + (e.message || 'unknown') + '\n' + (e.filename || '') + ':' + (e.lineno || 0));
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var r = e.reason || {};
+        show('[REJECT] ' + (r.message || r.toString() || 'unknown'));
+      });
+    })();
+  </script>
 </body>
 </html>

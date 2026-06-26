@@ -464,14 +464,14 @@ async function upgradePlan() {
 function openMainApp() {
   // Navigate in same tab (avoids popup blocker)
   showSuccess('Abriendo RelayPay Pro...');
-  window.location.href = './nomina_v71.html';
+  window.location.href = './relaypay-pro.html';
 }
 
 function downloadApp() {
-  // Download the standalone HTML app
+  // Download the standalone HTML app (clean public version)
   showSuccess('Descargando RelayPay Pro...');
   const link = document.createElement('a');
-  link.href = './nomina_v71.html';
+  link.href = './relaypay-pro.html';
   link.download = 'RelayPay-Pro.html';
   document.body.appendChild(link);
   link.click();

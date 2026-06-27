@@ -62,20 +62,112 @@ function renderDeductionsFallback(APP) {
 /* ------------------------------------------------------------
    Global action router — handles data-action="module.fnName"
    ------------------------------------------------------------ */
+// Map of action names to view namespaces. Used to resolve `data-action="module.fnName"`
+// (e.g. `data-action="navigate"` → DashboardView.navigate or NavigationView.navigate,
+// `data-action="saveInvoice"` → InvoiceView.saveInvoice, etc.).
+const VIEW_NAMESPACES = {
+  navigate: DashboardView,
+  navigation: DashboardView,
+  Navigation: DashboardView,
+  dashboard: DashboardView,
+  Dashboard: DashboardView,
+  companies: CompaniesView,
+  Companies: CompaniesView,
+  drivers: DriversView,
+  Drivers: DriversView,
+  invoice: InvoiceView,
+  Invoice: InvoiceView,
+  payano: PayanoView,
+  Payano: PayanoView,
+  myCompany: MyCompanyView,
+  MyCompany: MyCompanyView,
+  pendientes: PendientesView,
+  Pendientes: PendientesView,
+  search: SearchView,
+  Search: SearchView,
+  tolls: TollsView,
+  Tolls: TollsView,
+  deductions: DeductionsView,
+  Deductions: DeductionsView,
+  settings: SettingsView,
+  Settings: SettingsView,
+  login: LoginView,
+  Login: LoginView,
+  conciliation: ConciliationView,
+  Conciliation: ConciliationView,
+  reports: ReportsView,
+  Reports: ReportsView,
+  archive: ArchiveView,
+  Archive: ArchiveView,
+  modal: Modal,
+  Modal: Modal,
+};
+
+// Explicit overrides for actions that need custom wrappers (e.g. reload after,
+// or arg-shaping). Falls through to dynamic resolution if not present.
 const ACTION_BINDINGS = {
   'navigation.show': (APP, view) => showView(view),
+  'navigate': (APP, view) => showView(view),
   'login.submit': (APP) => LoginView.handleAuthSubmit && LoginView.handleAuthSubmit(APP, 'login', { onSuccess: () => location.reload() }),
-  'settings.changeLanguage': (APP, lang) => SettingsView.changeLanguage(APP, lang, { onSuccess: () => location.reload() }),
+  'settings.changeLanguage': (APP, lang) => SettingsView.changeLanguage && SettingsView.changeLanguage(APP, lang, { onSuccess: () => location.reload() }),
+  'changeLanguage': (APP, lang) => changeLanguage && changeLanguage(lang),
+  'switchAuthMode': (APP) => LoginView.switchAuthMode && LoginView.switchAuthMode(),
+  'handleAuthSubmit': (APP) => LoginView.handleAuthSubmit && LoginView.handleAuthSubmit(APP, 'login', { onSuccess: () => location.reload() }),
+  'closeModal': () => closeModal && closeModal(),
+  'refreshCurrentView': (APP) => {
+    if (APP && APP.currentView) showView(APP.currentView);
+  },
+  'resetAllData': (APP) => {
+    if (confirm('¿Borrar todos los datos? Esta acción no se puede deshacer.')) {
+      StorageService.clear();
+      location.reload();
+    }
+  },
+  'exportAllData': (APP) => {
+    const data = {};
+    try { data.companies = APP.companies || []; } catch (e) {}
+    try { data.drivers = APP.drivers || []; } catch (e) {}
+    try { data.invoices = APP.invoices || []; } catch (e) {}
+    try { data.settings = APP.settings || {}; } catch (e) {}
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relaypay-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 };
 
 function dispatchAction(action, APP, ...args) {
-  const fn = ACTION_BINDINGS[action];
-  if (fn) {
-    try { return fn(APP, ...args); }
-    catch (e) { console.error('Action failed:', action, e); }
-  } else {
-    console.warn('No action handler for:', action);
+  // 1) Explicit binding wins
+  const explicit = ACTION_BINDINGS[action];
+  if (explicit) {
+    try { return explicit(APP, ...args); }
+    catch (e) { console.error('Action failed:', action, e); return; }
   }
+
+  // 2) Try dynamic resolution as `module.functionName` against imported namespaces
+  const dotIdx = action.indexOf('.');
+  if (dotIdx > 0) {
+    const moduleName = action.slice(0, dotIdx);
+    const fnName = action.slice(dotIdx + 1);
+    const ns = VIEW_NAMESPACES[moduleName];
+    if (ns && typeof ns[fnName] === 'function') {
+      try { return ns[fnName](APP, ...args); }
+      catch (e) { console.error('Action failed:', action, e); return; }
+    }
+  }
+
+  // 3) Try treating the action as a bare function name; search all namespaces
+  for (const ns of Object.values(VIEW_NAMESPACES)) {
+    if (ns && typeof ns[action] === 'function') {
+      try { return ns[action](APP, ...args); }
+      catch (e) { console.error('Action failed:', action, e); return; }
+    }
+  }
+
+  console.warn('No action handler for:', action);
 }
 
 /* ------------------------------------------------------------
@@ -116,7 +208,7 @@ function installEventDelegation() {
     if (!target) return;
     const action = target.getAttribute('data-action');
     const APP = getApp();
-    const param = target.getAttribute('data-param') || target.getAttribute('data-view') || null;
+    const param = target.getAttribute('data-param') || target.getAttribute('data-view') || target.getAttribute('data-id') || null;
     event.preventDefault();
     if (param) dispatchAction(action, APP, param);
     else dispatchAction(action, APP);

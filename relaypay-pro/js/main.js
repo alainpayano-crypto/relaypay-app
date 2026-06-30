@@ -13,7 +13,8 @@ import { LoadingService } from './services/LoadingService.js';
 import { modal as Modal, closeModal, showModal } from './components/Modal.js';
 import { getApp, installApp } from './stateHelpers.js';
 import { setLanguage, getLanguage, applyTranslations, t, changeLanguage } from './i18n.js';
-import { APP_CONFIG, STORAGE_KEYS, ROLES, VIEWS } from './config.js';
+import { APP_CONFIG, STORAGE_KEYS, ROLES, VIEWS, SCHEMA_VERSION, SCHEMA_VERSION_KEY } from './config.js';
+import { LOGO_URI } from './config/logo.js';
 
 import * as DashboardView from './views/DashboardView.js';
 import * as CompaniesView from './views/CompaniesView.js';
@@ -250,6 +251,14 @@ function showView(viewName) {
    ------------------------------------------------------------ */
 function installEventDelegation() {
   document.addEventListener('click', (event) => {
+    // Invoice upload zone click → trigger hidden file input
+    const dropZone = event.target.closest('#invoiceDropZone');
+    if (dropZone) {
+      const fileInput = document.getElementById('invoiceFileInput');
+      if (fileInput) fileInput.click();
+      return;
+    }
+
     const target = event.target.closest('[data-action]');
     if (!target) return;
     const action = target.getAttribute('data-action');
@@ -261,15 +270,49 @@ function installEventDelegation() {
   });
 
   document.addEventListener('change', (event) => {
-    const target = event.target.closest('[data-action-change]');
-    if (!target) return;
-    const action = target.getAttribute('data-action-change');
+    const target = event.target;
+    // Invoice file input change → load files into APP.pendingFiles
+    if (target && target.id === 'invoiceFileInput') {
+      const APP = getApp();
+      if (target.files && target.files.length > 0 && typeof InvoiceView.handleInvoiceFiles === 'function') {
+        InvoiceView.handleInvoiceFiles(APP, { target });
+      }
+      return;
+    }
+
+    const actionTarget = event.target.closest('[data-action-change]');
+    if (!actionTarget) return;
+    const action = actionTarget.getAttribute('data-action-change');
     const APP = getApp();
-    const value = target.value;
+    const value = actionTarget.value;
     const fn = ACTION_BINDINGS[action];
     if (fn) {
       try { fn(APP, value); }
       catch (e) { console.error('Change action failed:', action, e); }
+    }
+  });
+
+  // Drag & drop for invoice upload zone
+  document.addEventListener('dragover', (event) => {
+    const dropZone = event.target.closest('#invoiceDropZone');
+    if (dropZone) {
+      event.preventDefault();
+      dropZone.classList.add('dragover');
+    }
+  });
+  document.addEventListener('dragleave', (event) => {
+    const dropZone = event.target.closest('#invoiceDropZone');
+    if (dropZone) dropZone.classList.remove('dragover');
+  });
+  document.addEventListener('drop', (event) => {
+    const dropZone = event.target.closest('#invoiceDropZone');
+    if (!dropZone) return;
+    event.preventDefault();
+    dropZone.classList.remove('dragover');
+    const APP = getApp();
+    if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0
+        && typeof InvoiceView.handleInvoiceFiles === 'function') {
+      InvoiceView.handleInvoiceFiles(APP, { target: { files: event.dataTransfer.files } });
     }
   });
 }
@@ -279,6 +322,27 @@ function installEventDelegation() {
    ------------------------------------------------------------ */
 function bootstrap() {
   console.log('[RelayPay] Booting modular build v' + (APP_CONFIG?.version || '7.6.6'));
+
+  // 0) Inject logo into the sidebar shell (data URL — no external file needed)
+  try {
+    const logoImg = document.getElementById('appLogo');
+    if (logoImg && !logoImg.getAttribute('src')) logoImg.src = LOGO_URI;
+  } catch (e) { /* noop */ }
+
+  // 0.5) Schema migration: wipe legacy localStorage from the pre-SaaS build.
+  //      The first deployment of this build nukes any pre-existing companies/
+  //      drivers/invoices so new paying subscribers start with a clean slate.
+  //      Users who already have the marker are left alone.
+  try {
+    const storedSchema = (typeof localStorage !== 'undefined') ? localStorage.getItem(SCHEMA_VERSION_KEY) : null;
+    if (storedSchema !== SCHEMA_VERSION) {
+      Object.values(STORAGE_KEYS).forEach(k => {
+        try { if (typeof localStorage !== 'undefined') localStorage.removeItem(k); } catch (e) {}
+      });
+      try { if (typeof localStorage !== 'undefined') localStorage.setItem(SCHEMA_VERSION_KEY, SCHEMA_VERSION); } catch (e) {}
+      console.log('[RelayPay] Schema migration: cleared legacy localStorage');
+    }
+  } catch (e) { /* noop */ }
 
   // 1) Set language from storage or browser preference
   const lang = StorageService.get(STORAGE_KEYS.language, null) || getLanguage() || 'es';

@@ -23,6 +23,9 @@ export function getApiUrl() {
   return 'https://relaypay-backend-production.up.railway.app';
 }
 
+export const SCHEMA_VERSION = '7.6.6-saas-clean';
+export const SCHEMA_VERSION_KEY = 'relaypay_schema_version';
+
 export const STORAGE_KEYS = {
   companies: 'relaypay_v6_companies',
   drivers: 'relaypay_v6_drivers',

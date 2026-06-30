@@ -124,6 +124,20 @@ const ACTION_BINDINGS = {
       location.reload();
     }
   },
+  'openMyCompanyEditModal': (APP) => {
+    if (typeof MyCompanyView.openEditMyCompanyModal === 'function') {
+      MyCompanyView.openEditMyCompanyModal(APP, Modal, { toast: NotificationService?.show, navigate: (v) => showView(v) });
+    }
+  },
+  'saveMyCompanyFromModal': (APP) => {
+    if (typeof MyCompanyView.saveMyCompanyFromModal === 'function') {
+      MyCompanyView.saveMyCompanyFromModal(APP, {
+        toast: NotificationService?.show,
+        closeModal: () => closeModal && closeModal(),
+        navigate: (v) => showView(v),
+      });
+    }
+  },
   'exportAllData': (APP) => {
     const data = {};
     try { data.companies = APP.companies || []; } catch (e) {}

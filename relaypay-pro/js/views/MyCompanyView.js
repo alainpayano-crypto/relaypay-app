@@ -6,8 +6,11 @@
 import { escapeHtml, money, moneyShort, fmtDate, uid, normalizeStr } from '../utils.js';
 import { downloadDriverInvoice } from '../services/PdfService.js';
 
+// SaaS build: the owner company name must be empty by default so paying
+// subscribers enter their own company name on first visit. Anyone who
+// already has a company saved in localStorage keeps it.
 const OWNER_DEFAULT_COMPANY = {
-  name: 'PAYANO EXPRESS LLC',
+  name: '',
   mcNumber: '',
   dotNumber: '',
   ein: '',
@@ -23,6 +26,72 @@ export function getMyCompany() {
   const fresh = { ...OWNER_DEFAULT_COMPANY, createdAt: new Date().toISOString() };
   try { localStorage.setItem('relaypay_owner_company', JSON.stringify(fresh)); } catch (e) {}
   return fresh;
+}
+
+export function saveMyCompany(company, APP, callbacks = {}) {
+  if (!company || typeof company !== 'object') return;
+  const cleaned = {
+    name: String(company.name || '').trim(),
+    mcNumber: String(company.mcNumber || '').trim(),
+    dotNumber: String(company.dotNumber || '').trim(),
+    ein: String(company.ein || '').trim(),
+    defaultPct: Number(company.defaultPct) || 100,
+    createdAt: company.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  try { localStorage.setItem('relaypay_owner_company', JSON.stringify(cleaned)); } catch (e) {}
+  if (callbacks.toast) callbacks.toast('Información de tu empresa guardada', 'success');
+  return cleaned;
+}
+
+export function openEditMyCompanyModal(APP, modalApi, callbacks = {}) {
+  if (typeof modalApi?.open !== 'function') return;
+  const owner = getMyCompany();
+  const html = `
+    <h2 class="modal-title">🏠 Editar Mi Compañía</h2>
+    <p style="margin-bottom:16px;color:#64748b;font-size:13px;">Esta información es privada y solo se usa para tu empresa. No se comparte con otros suscriptores.</p>
+    <div class="form-group">
+      <label>Nombre de la Empresa *</label>
+      <input type="text" id="myCompanyName" value="${escapeHtml(owner.name)}" placeholder="Ej: Tu Empresa LLC" maxlength="120">
+    </div>
+    <div class="form-group">
+      <label>MC Number</label>
+      <input type="text" id="myCompanyMC" value="${escapeHtml(owner.mcNumber)}" placeholder="Ej: MC-123456">
+    </div>
+    <div class="form-group">
+      <label>DOT Number</label>
+      <input type="text" id="myCompanyDOT" value="${escapeHtml(owner.dotNumber)}" placeholder="Ej: 1234567">
+    </div>
+    <div class="form-group">
+      <label>EIN (Tax ID)</label>
+      <input type="text" id="myCompanyEIN" value="${escapeHtml(owner.ein)}" placeholder="Ej: 12-3456789">
+    </div>
+    <div class="form-group">
+      <label>% Por Defecto (default para choferes)</label>
+      <input type="number" id="myCompanyPct" value="${owner.defaultPct || 100}" min="0" max="100" step="0.5">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-action="closeModal">Cancelar</button>
+      <button class="btn btn-primary" data-action="saveMyCompanyFromModal">💾 Guardar</button>
+    </div>
+  `;
+  modalApi.open(html);
+}
+
+export function saveMyCompanyFromModal(APP, callbacks = {}) {
+  const name = (typeof document !== 'undefined' && document.getElementById('myCompanyName')) ? document.getElementById('myCompanyName').value : '';
+  const mcNumber = (typeof document !== 'undefined' && document.getElementById('myCompanyMC')) ? document.getElementById('myCompanyMC').value : '';
+  const dotNumber = (typeof document !== 'undefined' && document.getElementById('myCompanyDOT')) ? document.getElementById('myCompanyDOT').value : '';
+  const ein = (typeof document !== 'undefined' && document.getElementById('myCompanyEIN')) ? document.getElementById('myCompanyEIN').value : '';
+  const pct = (typeof document !== 'undefined' && document.getElementById('myCompanyPct')) ? Number(document.getElementById('myCompanyPct').value) : 100;
+  if (!name.trim()) {
+    if (callbacks.toast) callbacks.toast('El nombre de la empresa es requerido', 'error');
+    return;
+  }
+  const owner = getMyCompany();
+  saveMyCompany({ ...owner, name: name.trim(), mcNumber, dotNumber, ein, defaultPct: pct }, APP, callbacks);
+  if (callbacks.closeModal) callbacks.closeModal();
+  if (callbacks.navigate) callbacks.navigate('myCompany');
 }
 
 export function renderMyCompanyView(APP, ctx = {}) {
@@ -44,12 +113,21 @@ export function renderMyCompanyView(APP, ctx = {}) {
         <h1 class="view-title" data-i18n="nav.my_company">🏠 Mi Compañía</h1>
         <p class="view-subtitle" data-i18n="myco.subtitle">Sección dedicada para tu empresa (no entra en totales globales)</p>
       </div>
+      <button class="btn btn-secondary" data-action="openMyCompanyEditModal">✏️ ${owner.name ? 'Editar' : 'Configurar'} Mi Empresa</button>
     </div>
 
-    <div class="alert alert-success">
-      <div><b data-i18n="myco.banner_title">💰 Tu Empresa — 100% para ti</b></div>
-      <p>${escapeHtml(owner.name)} <span data-i18n="myco.banner_desc">Esta empresa</span> <b data-i18n="myco.not_in_totals">NO está incluida en los totales globales</b> <span data-i18n="myco.of_payroll">de Payroll</span></p>
-    </div>
+    ${owner.name ? `
+      <div class="alert alert-success">
+        <div><b data-i18n="myco.banner_title">💰 Tu Empresa — 100% para ti</b></div>
+        <p><b>${escapeHtml(owner.name)}</b> <span data-i18n="myco.banner_desc">Esta empresa</span> <b data-i18n="myco.not_in_totals">NO está incluida en los totales globales</b> <span data-i18n="myco.of_payroll">de Payroll</span></p>
+        ${owner.mcNumber || owner.dotNumber || owner.ein ? `<p style="margin-top:8px;font-size:12px;color:#94a3b8;">${owner.mcNumber ? 'MC: ' + escapeHtml(owner.mcNumber) : ''}${owner.dotNumber ? ' · DOT: ' + escapeHtml(owner.dotNumber) : ''}${owner.ein ? ' · EIN: ' + escapeHtml(owner.ein) : ''}</p>` : ''}
+      </div>
+    ` : `
+      <div class="alert alert-warning">
+        <div><b>⚠️ Aún no has configurado tu empresa</b></div>
+        <p>Haz clic en <b>"Configurar Mi Empresa"</b> arriba para ingresar el nombre de tu compañía. Esta sección mostrará tu revenue, choferes y facturas separadas de los totales globales.</p>
+      </div>
+    `}
 
     <div class="stats-grid">
       <div class="stat-card">

@@ -21,9 +21,28 @@
   <link rel="stylesheet" href="./css/toast.css">
 </head>
 <body>
-  <!-- Mount points for the SPA shell -->
-  <div id="userInfoSlot"></div>
-  <div id="view-root"></div>
+  <!-- SPA shell: sidebar + main content area -->
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <img src="./logo.svg" alt="RelayPay Pro" onerror="this.style.display='none'">
+        </div>
+        <div class="logo-text">
+          <div class="logo-name">Relay<span class="pay">Pay</span></div>
+          <div class="logo-sub">PROFESSIONAL</div>
+        </div>
+      </div>
+      <nav id="sidebar-nav"></nav>
+      <div class="footer">
+        <div>v7.6.6 &copy; RelayPay</div>
+      </div>
+    </aside>
+    <div class="main">
+      <div id="userInfoSlot"></div>
+      <div id="view-root"></div>
+    </div>
+  </div>
   <div id="modal-root"></div>
   <div id="toast-root"></div>
 

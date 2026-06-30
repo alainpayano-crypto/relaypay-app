@@ -171,6 +171,42 @@ function dispatchAction(action, APP, ...args) {
 }
 
 /* ------------------------------------------------------------
+   Sidebar navigation
+   ------------------------------------------------------------ */
+// Some VIEWS ids use camelCase (e.g. `myCompany`) while VIEW_RENDERERS uses
+// snake_case (e.g. `my_company`). Map them so sidebar links resolve correctly.
+const VIEW_ID_ALIASES = {
+  myCompany: 'my_company',
+  my_company: 'myCompany',
+};
+
+function renderSidebar(activeViewId) {
+  const nav = document.getElementById('sidebar-nav');
+  if (!nav) return;
+  const html = (VIEWS || []).map(v => {
+    const targetId = VIEW_ID_ALIASES[v.id] || v.id;
+    const isActive = activeViewId && (activeViewId === v.id || activeViewId === targetId);
+    const label = (typeof t === 'function' ? t(v.i18n, v.label) : v.label);
+    return `<a href="#" data-action="navigate" data-view="${escapeAttr(targetId)}" class="${isActive ? 'active' : ''}"><span class="nav-icon">${escapeAttr(v.icon)}</span><span class="nav-label">${escapeHtml(label)}</span></a>`;
+  }).join('');
+  nav.innerHTML = html;
+  if (typeof applyTranslations === 'function') applyTranslations();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeAttr(s) {
+  return escapeHtml(s);
+}
+
+/* ------------------------------------------------------------
    View switching
    ------------------------------------------------------------ */
 function showView(viewName) {
@@ -191,6 +227,16 @@ function showView(viewName) {
     root.innerHTML = html || '';
     if (typeof applyTranslations === 'function') applyTranslations();
     APP.currentView = viewName;
+    // Update active sidebar link
+    try {
+      const nav = document.getElementById('sidebar-nav');
+      if (nav) {
+        nav.querySelectorAll('a').forEach(a => {
+          if (a.getAttribute('data-view') === viewName) a.classList.add('active');
+          else a.classList.remove('active');
+        });
+      }
+    } catch (e) { /* noop */ }
   } catch (e) {
     console.error('Render error:', e);
     NotificationService.show('Render error: ' + e.message, 'error');
@@ -250,11 +296,10 @@ function bootstrap() {
 
   // 5) Decide initial view based on session
   const session = AppState.data.session || AppState.data.user;
-  if (!session) {
-    showView('welcome');
-  } else {
-    showView('dashboard');
-  }
+  const initialView = !session ? 'welcome' : 'dashboard';
+  // Render sidebar with the initial active view highlighted
+  renderSidebar(initialView);
+  showView(initialView);
 
   console.log('[RelayPay] Boot complete. Language:', lang, 'Session:', !!session);
 }

@@ -15,6 +15,7 @@ import { getApp, installApp } from './stateHelpers.js';
 import { setLanguage, getLanguage, applyTranslations, t, changeLanguage } from './i18n.js';
 import { APP_CONFIG, STORAGE_KEYS, ROLES, VIEWS, SCHEMA_VERSION, SCHEMA_VERSION_KEY } from './config.js';
 import { LOGO_URI } from './config/logo.js';
+import { readFile as readInvoiceFile } from './services/FileReaderService.js';
 
 import * as DashboardView from './views/DashboardView.js';
 import * as CompaniesView from './views/CompaniesView.js';
@@ -289,7 +290,11 @@ function installEventDelegation() {
     if (target && target.id === 'invoiceFileInput') {
       const APP = getApp();
       if (target.files && target.files.length > 0 && typeof InvoiceView.handleInvoiceFiles === 'function') {
-        InvoiceView.handleInvoiceFiles(APP, { target });
+        InvoiceView.handleInvoiceFiles(APP, { target }, {
+          readFile: readInvoiceFile,
+          toast: NotificationService?.show,
+          refreshCurrentView: () => showView(APP.currentView || 'invoice'),
+        });
       }
       return;
     }
@@ -326,7 +331,11 @@ function installEventDelegation() {
     const APP = getApp();
     if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0
         && typeof InvoiceView.handleInvoiceFiles === 'function') {
-      InvoiceView.handleInvoiceFiles(APP, { target: { files: event.dataTransfer.files } });
+      InvoiceView.handleInvoiceFiles(APP, { target: { files: event.dataTransfer.files } }, {
+        readFile: readInvoiceFile,
+        toast: NotificationService?.show,
+        refreshCurrentView: () => showView(APP.currentView || 'invoice'),
+      });
     }
   });
 }
@@ -350,7 +359,12 @@ function bootstrap() {
   try {
     const storedSchema = (typeof localStorage !== 'undefined') ? localStorage.getItem(SCHEMA_VERSION_KEY) : null;
     if (storedSchema !== SCHEMA_VERSION) {
-      Object.values(STORAGE_KEYS).forEach(k => {
+      const keysToWipe = Object.values(STORAGE_KEYS).concat([
+        'relaypay_owner_company',
+        'relaypay_session',
+        'relaypay_user',
+      ]);
+      keysToWipe.forEach(k => {
         try { if (typeof localStorage !== 'undefined') localStorage.removeItem(k); } catch (e) {}
       });
       try { if (typeof localStorage !== 'undefined') localStorage.setItem(SCHEMA_VERSION_KEY, SCHEMA_VERSION); } catch (e) {}

@@ -413,6 +413,11 @@ if (typeof window !== 'undefined') {
   window.changeLanguage = changeLanguage;
   window.showView = showView;
   window.APP_CONFIG = APP_CONFIG;
+  // Expose services for legacy code / debugging
+  window.NotificationService = NotificationService;
+  window.LoadingService = LoadingService;
+  window.StorageService = StorageService;
+  window.Modal = Modal;
 
   // Expose each view namespace so legacy onclick="PayanoView.foo()" keeps working
   window.DashboardView = DashboardView;
